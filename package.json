@@ -5,7 +5,6 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "lint": "eslint .",
     "postinstall": "prisma generate"
   },
   "dependencies": {
