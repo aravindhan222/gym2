@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { DesktopSidebar, MobileBottomNav } from "@/components/titanflow/navigation"
 import { Dashboard } from "@/components/titanflow/dashboard"
@@ -9,7 +10,7 @@ import { HIITTimer } from "@/components/titanflow/hiit-timer"
 import { WorkoutLog } from "@/components/titanflow/workout-log"
 import { ExerciseLibrary } from "@/components/titanflow/exercise-library"
 import { WeeklySchedule } from "@/components/titanflow/weekly-schedule"
-import { Zap, CalendarDays } from "lucide-react"
+import { Zap, CalendarDays, Loader2 } from "lucide-react"
 
 const pageVariants = {
   initial: { opacity: 0, y: 10 },
@@ -27,7 +28,35 @@ const tabTitles: Record<string, string> = {
 }
 
 export default function TitanFlowPage() {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState("home")
+  const [isAuthChecking, setIsAuthChecking] = useState(true)
+
+  useEffect(() => {
+    const user = localStorage.getItem("titanflow_user")
+    if (!user) {
+      router.replace("/login")
+    } else {
+      setIsAuthChecking(false)
+    }
+  }, [router])
+
+  if (isAuthChecking) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex flex-col items-center gap-3"
+        >
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/70 shadow-lg shadow-primary/30">
+            <Zap className="h-6 w-6 text-primary-foreground" />
+          </div>
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+        </motion.div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-background">
