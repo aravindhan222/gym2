@@ -1,5 +1,7 @@
 "use client"
 
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { 
   Home,
@@ -9,9 +11,41 @@ import {
   Zap,
   BookOpen,
   CalendarDays,
-  Activity
+  Activity,
+  LogOut,
+  User
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+
+interface UserData {
+  name: string
+  email: string
+}
+
+function useUser() {
+  const [user, setUser] = useState<UserData | null>(null)
+  useEffect(() => {
+    const stored = localStorage.getItem("titanflow_user")
+    if (stored) {
+      try { setUser(JSON.parse(stored)) } catch { /* ignore */ }
+    }
+  }, [])
+  return user
+}
+
+function UserAvatar({ name }: { name: string }) {
+  const initials = name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2)
+  return (
+    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/60 text-sm font-bold text-primary-foreground shadow-md shadow-primary/20">
+      {initials || <User className="h-4 w-4" />}
+    </div>
+  )
+}
 
 interface NavigationProps {
   activeTab: string
@@ -120,17 +154,52 @@ export function DesktopSidebar({ activeTab, onTabChange }: NavigationProps) {
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="border-t border-border/30 px-5 xl:px-6 py-3 xl:py-4">
-        <p className="text-[10px] xl:text-xs text-muted-foreground">
-          Push your limits every day
-        </p>
-      </div>
+      {/* User Profile Footer */}
+      <UserProfileCard />
     </aside>
   )
 }
 
+function UserProfileCard() {
+  const router = useRouter()
+  const user = useUser()
+
+  const handleSignOut = () => {
+    localStorage.removeItem("titanflow_user")
+    router.push("/login")
+  }
+
+  return (
+    <div className="border-t border-border/30 px-3 xl:px-4 py-3 xl:py-4">
+      <div className="flex items-center gap-3">
+        <UserAvatar name={user?.name || "?"} />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-foreground truncate">{user?.name || "User"}</p>
+          <p className="text-[10px] xl:text-xs text-muted-foreground truncate">{user?.email || ""}</p>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={handleSignOut}
+          className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary/60 text-muted-foreground hover:bg-destructive/20 hover:text-destructive transition-colors"
+          title="Sign out"
+        >
+          <LogOut className="h-4 w-4" />
+        </motion.button>
+      </div>
+    </div>
+  )
+}
+
 export function MobileBottomNav({ activeTab, onTabChange }: NavigationProps) {
+  const router = useRouter()
+  const user = useUser()
+
+  const handleSignOut = () => {
+    localStorage.removeItem("titanflow_user")
+    router.push("/login")
+  }
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/30 bg-card/95 backdrop-blur-2xl safe-area-pb lg:hidden">
       <ul className="flex items-center justify-around px-1 py-1">
@@ -176,6 +245,25 @@ export function MobileBottomNav({ activeTab, onTabChange }: NavigationProps) {
             </li>
           )
         })}
+
+        {/* Sign Out button in mobile nav */}
+        <li className="flex-1">
+          <motion.button
+            onClick={handleSignOut}
+            whileTap={{ scale: 0.9 }}
+            className="relative flex w-full min-h-[56px] flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-2 text-muted-foreground transition-all duration-300"
+          >
+            <motion.div
+              animate={{ y: 0 }}
+              transition={{ type: "spring", stiffness: 500 }}
+            >
+              <LogOut className="relative z-10 h-5 w-5 sm:h-6 sm:w-6" />
+            </motion.div>
+            <span className="relative z-10 text-[9px] sm:text-[10px] font-semibold text-muted-foreground">
+              Out
+            </span>
+          </motion.button>
+        </li>
       </ul>
     </nav>
   )
